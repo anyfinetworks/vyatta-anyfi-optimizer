@@ -19,9 +19,10 @@ For more information see the
           controller <ipv4: CONTROLLER ADDRESS>
           port-range <txt: UDP PORT RANGE TO USE FOR THIS SERVICE>
           break-out
-            public-key <txt: PEM FORMAT RSA PUBLIC KEY FILENAME>
-            private-key <txt: PEM FORMAT RSA PRIVATE KEY FILENAME>
-            address <ip4net: SUBNET TO USE FOR IP NAT OF CLIENT TRAFFIC>
+            public-key <txt: BASE64 ENCODED RSA PUBLIC KEY>
+            private-key <txt: BASE64 ENCODED RSA PRIVATE KEY>
+            subnet <ip4net: SUBNET TO USE FOR IP NAT OF CLIENT TRAFFIC>
+            ports-per-service <u16: NUMBER OF TCP/UDP NAT PORTS PER SERVICE>
 
 # Operational Commands
 
