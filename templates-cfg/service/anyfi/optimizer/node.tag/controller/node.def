@@ -1,0 +1,5 @@
+type: txt
+help: SDWN controller [REQUIRED]
+val_help: ipv4; IP address
+val_help: <text>; Domain name
+syntax:expression: pattern $VAR(@) "^(([A-Za-z0-9_-]+)\\.)*([A-Za-z0-9_-]+)$"

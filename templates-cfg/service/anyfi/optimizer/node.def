@@ -1,0 +1,43 @@
+tag:
+priority: 999
+type: txt
+help: Anyfi Optimizer
+
+end:
+     if [ ${COMMIT_ACTION} == DELETE ]; then
+         echo -n "Stopping anyfi optimizer:"
+         sudo kill -TERM $(sudo cat /var/run/anyfi-optimizer-$VAR(@).pid)
+         sudo rm -f /etc/anyfi-optimizer-$VAR(@).conf
+         echo " anyfi-optimizer."
+     else	
+         # If this is an update, then first stop the old daemon
+         if [ ${COMMIT_ACTION} == ACTIVE ]; then
+             # Stop the old daemon
+             if [ -f /var/run/anyfi-optimizer-$VAR(@).pid ]; then
+                 echo -n "Stopping anyfi optimizer:"
+                 sudo kill -TERM $(sudo cat /var/run/anyfi-optimizer-$VAR(@).pid)
+                 echo " anyfi-optimizer."
+             fi
+         fi
+
+         # Regenerate the config file
+         sudo /opt/vyatta/sbin/vyatta-anyfi-optimizer.pl --instance=$VAR(@) --config=/etc/anyfi-optimizer-$VAR(@).conf || exit 1 
+
+         # Make sure settings passed on command line are set
+         if [ -z "$VAR(controller/@)" ]; then
+            echo "Error configuring anyfi optimizer: must specify controller."
+            exit 1
+         fi
+         if [ -z "$VAR(port-range/@)" ]; then
+            echo "Error configuring anyfi optimizer: must specify UDP port range."
+            exit 1
+         fi
+
+         port_range=`/bin/cli-shell-api returnValue service anyfi optimizer $VAR(@) port-range`
+
+         # Start the daemon
+         echo -n "Starting anyfi optimizer:"
+         sudo /usr/sbin/anyfi-optimizer --accept-license -C $VAR(controller/@) -p $port_range -B -P /var/run/anyfi-optimizer-$VAR(@).pid /etc/anyfi-optimizer-$VAR(@).conf || exit 1
+         echo " anyfi-optimizer."
+     fi
+
