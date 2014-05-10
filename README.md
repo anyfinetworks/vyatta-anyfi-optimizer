@@ -18,7 +18,7 @@ For more information see the
         optimizer <txt: NAME>
           controller <ipv4: CONTROLLER ADDRESS>
           port-range <txt: UDP PORT RANGE TO USE FOR THIS SERVICE>
-          break-out
+          breakout
             public-key <txt: BASE64 ENCODED RSA PUBLIC KEY>
             private-key <txt: BASE64 ENCODED RSA PRIVATE KEY>
             subnet <ip4net: SUBNET TO USE FOR IP NAT OF CLIENT TRAFFIC>

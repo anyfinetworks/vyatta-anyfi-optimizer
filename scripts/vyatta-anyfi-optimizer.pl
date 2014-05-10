@@ -88,11 +88,11 @@ sub generate_config
     }
     $config_string .= setup_port_range($port_range);
 
-    # Break-out of Internet-bound traffic
-    if( $config->exists("break-out") )
+    # Breakout of Internet-bound traffic
+    if( $config->exists("breakout") )
     {
         # Public key
-        my $pubkey = $config->returnValue("break-out public-key");
+        my $pubkey = $config->returnValue("breakout public-key");
         if( !$pubkey )
         {
             error("must specify public key.");
@@ -100,7 +100,7 @@ sub generate_config
         $config_string .= setup_key('public', $pubkey);
 
         # Private key
-        my $privkey = $config->returnValue("break-out private-key");
+        my $privkey = $config->returnValue("breakout private-key");
         if( !$privkey )
         {
             error("must specify private key.");
@@ -108,7 +108,7 @@ sub generate_config
         $config_string .= setup_key('private', $privkey);
 
         # NAT subnet
-        my $subnet = $config->returnValue("break-out subnet");
+        my $subnet = $config->returnValue("breakout subnet");
         if( !$subnet )
         {
             error("must specify NAT subnet.");
@@ -116,10 +116,10 @@ sub generate_config
         $config_string .= setup_subnet($subnet);
 
         # NAT port allocation strategy
-        if( $config->exists("break-out ports") )
+        if( $config->exists("breakout ports") )
         {
             # Allocate fixed number of ports per SDWN service
-            my $pps = $config->returnValue("break-out ports per-service");
+            my $pps = $config->returnValue("breakout ports per-service");
 
             # TODO: Other port allocation strategies?
 
