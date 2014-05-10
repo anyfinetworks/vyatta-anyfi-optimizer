@@ -1,0 +1,19 @@
+Source: vyatta-anyfi-optimizer
+Section: contrib/net
+Priority: extra
+Maintainer: Anyfi Networks <eng@anyfinetworks.com>
+Standards-Version: 3.9.1
+Build-Depends: debhelper (>= 5), autotools-dev, autoconf
+
+Package: vyatta-anyfi-optimizer
+Architecture: all
+Depends: vyatta-cfg-system,
+ vyatta-cfg,
+ vyatta-op,
+ anyfi-optimizer,
+ ${misc:Depends}
+Replaces: vyatta-anyfi-optimizer
+Description: Vyatta integration for Anyfi Optimizer
+ Vyatta integration for Anyfi Optimizer, A Software-Defined
+ Wireless Networking (SDWN) relay with local break-out
+ and Carrier Grade NAT (CGN) for carrier Wi-Fi.

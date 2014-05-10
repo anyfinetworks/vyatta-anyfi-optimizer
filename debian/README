@@ -1,0 +1,7 @@
+The Debian Package vyatta-anyfi-optimizer
+-----------------------------------------
+
+This package contains Vyatta integration templates and scripts for the
+Anyfi Optimizer.
+
+ -- Daniil Baturin <daniil@baturin.org>  Tue, 26 Nov 2013 00:00:00 -0700
