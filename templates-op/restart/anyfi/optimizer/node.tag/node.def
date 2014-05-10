@@ -1,0 +1,21 @@
+help: Restart optimizer instance
+allowed: cli-shell-api listEffectiveNodes service anyfi optimizer | sed -re s/\'//g
+run: if [ -f /var/run/anyfi-optimizer-$4.pid ]; then
+         PID=$(sudo cat /var/run/anyfi-optimizer-$4.pid 2> /dev/null)
+
+         CMDLINE=$(cat /proc/$PID/cmdline 2> /dev/null | tr '\00' ' ')
+
+         if echo $CMDLINE | grep -q "^/usr/sbin/anyfi-optimizer"; then
+             echo -n "Stopping anyfi optimizer:"
+             sudo kill -TERM $PID 2> /dev/null && sleep 1 && echo -n " anyfi-optimizer"
+             echo "."
+
+             echo -n "Starting anyfi optimizer:"
+             sudo sh -c "exec $CMDLINE" && echo -n " anyfi-optimizer"
+             echo "."
+         else
+             echo "Error restarting anyfi optimizer: don't know how to restart."
+         fi
+     else
+         echo "Error restarting anyfi optimizer: no process running."
+     fi

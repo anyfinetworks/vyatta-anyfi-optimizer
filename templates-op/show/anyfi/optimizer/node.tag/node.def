@@ -1,0 +1,2 @@
+help: Show optimizer instance information
+allowed: cli-shell-api listEffectiveNodes service anyfi optimizer | sed -re s/\'//g

@@ -1,0 +1,2 @@
+help: Show license information
+run: /usr/sbin/anyfi-optimizer --license
