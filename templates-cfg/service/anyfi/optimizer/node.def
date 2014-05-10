@@ -33,8 +33,6 @@ end:
             exit 1
          fi
 
-         # TODO: Set up static route for NAT subnet to optimizer tun interface...
-
          # Extract first UDP port for command line option
          port_range=$(/bin/cli-shell-api returnValue service anyfi optimizer $VAR(@) port-range)
          first_port=$(echo $port_range | cut -d- -f1)

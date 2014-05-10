@@ -1,3 +1,0 @@
-type: txt
-help: RSA private key [REQUIRED]
-val_help: txt; BASE64 encoded PEM format key

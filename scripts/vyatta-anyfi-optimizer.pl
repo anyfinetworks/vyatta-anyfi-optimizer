@@ -25,8 +25,7 @@ use strict;
 use warnings;
 use Vyatta::Config;
 use Getopt::Long;
-
-my $conf_dir = "/etc/";
+use NetAddr::IP;
 
 sub error
 {
@@ -54,16 +53,53 @@ sub setup_port_range
     return($config_lines);
 }
 
-sub setup_key
+sub setup_key_pair
 {
-    # TODO: Break-out of Internet-bound traffic
-    return("");
+    my $instance = shift;
+    my $base64pem = shift;
+    my $keyfile = "/var/run/anyfi-optimizer-$instance.pem";
+    my $pubkeyfile = "/var/run/anyfi-optimizer-$instance.pub";
+    my $config_lines = "";
+
+    open(HANDLE, ">$keyfile") || error("could not open RSA key pair file for writing.");
+    print HANDLE "-----BEGIN RSA PRIVATE KEY-----\n";
+    my @lines = ( $base64pem =~ /.{1,64}/gs );
+    print HANDLE join("\n", @lines) . "\n";
+    print HANDLE "-----END RSA PRIVATE KEY-----\n";
+    close(HANDLE);
+
+    system("openssl rsa -in $keyfile -pubout -out $pubkeyfile 2> /dev/null") &&
+        error("could not extract public key from RSA key pair.");
+
+    $config_lines .= "keyfile = $keyfile\n";
+    $config_lines .= "pubkeyfile = $pubkeyfile\n";
+
+    return($config_lines);
 }
 
 sub setup_subnet
 {
-    # TODO: Break-out of Internet-bound traffic
-    return("");
+    my $subnet = shift;
+    my $ips = new NetAddr::IP($subnet);
+    my $config_lines = "";
+
+    # TODO: Support breakout for multiple optimizers!
+    system("route del -net $subnet 2> /dev/null");
+    system("ip tuntap del dev opt0 mode tun 2> /dev/null");
+
+    system("ip tuntap add dev opt0 mode tun");
+    system("ifconfig opt0 inet 169.254.1.1");
+    system("ifconfig opt0 dstaddr 169.254.1.2");
+    system("route add -net $subnet gw 169.254.1.2");
+
+    $config_lines .= "nat_if0 = tun/opt0 ip ";
+    $config_lines .= join(',', @$ips);
+    $config_lines .= "\n";
+
+    # Remove unwanted /32 specifier on all IP addresses
+    $config_lines =~ s|/32||g;
+
+    return($config_lines);
 }
 
 sub setup_pps
@@ -91,21 +127,13 @@ sub generate_config
     # Breakout of Internet-bound traffic
     if( $config->exists("breakout") )
     {
-        # Public key
-        my $pubkey = $config->returnValue("breakout public-key");
-        if( !$pubkey )
+        # RSA key pair
+        my $keypair = $config->returnValue("breakout rsa-key-pair");
+        if( !$keypair )
         {
-            error("must specify public key.");
+            error("must specify RSA key pair.");
         }
-        $config_string .= setup_key('public', $pubkey);
-
-        # Private key
-        my $privkey = $config->returnValue("breakout private-key");
-        if( !$privkey )
-        {
-            error("must specify private key.");
-        }
-        $config_string .= setup_key('private', $privkey);
+        $config_string .= setup_key_pair($instance, $keypair);
 
         # NAT subnet
         my $subnet = $config->returnValue("breakout subnet");
