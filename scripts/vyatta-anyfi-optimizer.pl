@@ -84,13 +84,15 @@ sub setup_subnet
     my $config_lines = "";
 
     # TODO: Support breakout for multiple optimizers!
-    system("route del -net $subnet 2> /dev/null");
+    system("route del -net $subnet 2> /dev/null") if (scalar(@$ips) > 1);
+    system("route del -host $subnet 2> /dev/null") if (scalar(@$ips) == 1);
     system("ip tuntap del dev opt0 mode tun 2> /dev/null");
 
     system("ip tuntap add dev opt0 mode tun");
     system("ifconfig opt0 inet 169.254.1.1");
     system("ifconfig opt0 dstaddr 169.254.1.2");
-    system("route add -net $subnet gw 169.254.1.2");
+    system("route add -net $subnet gw 169.254.1.2") if (scalar(@$ips) > 1);
+    system("route add -host $subnet gw 169.254.1.2") if (scalar(@$ips) == 1);
 
     $config_lines .= "nat_if0 = tun/opt0 ip ";
     $config_lines .= join(',', @$ips);
