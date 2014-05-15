@@ -135,8 +135,9 @@ sub setup_subnet
 
 sub setup_pps
 {
-    # TODO: Break-out of Internet-bound traffic
-    return("");
+    my $pps = shift;
+
+    return("nat.params.max_connections_per_lan = $pps\n");
 }
 
 sub generate_config

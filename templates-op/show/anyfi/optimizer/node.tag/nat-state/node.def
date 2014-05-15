@@ -1,0 +1,2 @@
+help: Show NAT connection state
+run: sudo /usr/sbin/anyfi-optimizerctl -c /var/run/relaydsock.$(sudo cat /var/run/anyfi-optimizer-$4.pid) nat.connections
