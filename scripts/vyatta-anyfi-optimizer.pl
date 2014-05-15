@@ -26,6 +26,7 @@ use warnings;
 use Vyatta::Config;
 use Getopt::Long;
 use NetAddr::IP;
+use IO::File;
 
 sub error
 {
@@ -77,24 +78,52 @@ sub setup_key_pair
     return($config_lines);
 }
 
+# TUN ioctl constants:
+use constant TUNSETIFF     => 0x400454ca;
+use constant TUNSETPERSIST => 0x400454cb;
+use constant IFF_TUN       => 0x0001;
+use constant IFF_PERSIST   => 0x0100;
+use constant STRUCT_IFREQ  => 'Z16 s';
+
+sub create_tun
+{
+    my $basename = shift;
+    my $ifname;
+
+    my $fh  = new IO::File('/dev/net/tun', 'r+');
+    my $ifr = pack(STRUCT_IFREQ, $basename, IFF_TUN);
+
+    ioctl $fh, TUNSETIFF, $ifr
+        or error("Can't create tun: $!");
+
+    $ifname = (unpack(STRUCT_IFREQ, $ifr))[0];
+
+    $ifr = pack(STRUCT_IFREQ, $ifname, IFF_PERSIST);
+
+    ioctl $fh, TUNSETPERSIST, $ifr
+        or error("Can't make tun persistant: $!");
+
+    return($ifname);
+}
+
 sub setup_subnet
 {
     my $subnet = shift;
     my $ips = new NetAddr::IP($subnet);
     my $config_lines = "";
 
-    # TODO: Support breakout for multiple optimizers!
+    my $tunif = create_tun('opt%d');
+    my $llidx = substr($tunif, 3) + 1;
+
     system("route del -net $subnet 2> /dev/null") if (scalar(@$ips) > 1);
     system("route del -host $subnet 2> /dev/null") if (scalar(@$ips) == 1);
-    system("ip tuntap del dev opt0 mode tun 2> /dev/null");
 
-    system("ip tuntap add dev opt0 mode tun");
-    system("ifconfig opt0 inet 169.254.1.1");
-    system("ifconfig opt0 dstaddr 169.254.1.2");
-    system("route add -net $subnet gw 169.254.1.2") if (scalar(@$ips) > 1);
-    system("route add -host $subnet gw 169.254.1.2") if (scalar(@$ips) == 1);
+    system("ifconfig $tunif inet 169.254.$llidx.1");
+    system("ifconfig $tunif dstaddr 169.254.$llidx.2");
+    system("route add -net $subnet gw 169.254.$llidx.2") if (scalar(@$ips) > 1);
+    system("route add -host $subnet gw 169.254.$llidx.2") if (scalar(@$ips) == 1);
 
-    $config_lines .= "nat_if0 = tun/opt0 ip ";
+    $config_lines .= "nat_if0 = tun/$tunif ip ";
     $config_lines .= join(',', @$ips);
     $config_lines .= "\n";
 
