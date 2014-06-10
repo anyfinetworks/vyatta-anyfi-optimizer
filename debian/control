@@ -10,6 +10,7 @@ Architecture: all
 Depends: vyatta-cfg-system,
  vyatta-cfg,
  vyatta-op,
+ vyatta-anyfi-common,
  anyfi-optimizer,
  ${misc:Depends}
 Replaces: vyatta-anyfi-optimizer
