@@ -6,7 +6,7 @@ vsbindir = $(vprefix)/sbin
 
 sbin_SCRIPTS = scripts/vyatta-anyfi-optimizer.pl
 
-bin_SCRIPTS = scripts/setup-anyfi-optimizer
+bin_SCRIPTS = scripts/vyatta-anyfi-optimizer-keygen
 
 cpiop = find  . ! -regex '\(.*~\|.*\.bak\|.*\.swp\|.*\#.*\#\)' -print0 | \
   cpio -0pd
