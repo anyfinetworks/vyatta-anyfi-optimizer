@@ -1,0 +1,4 @@
+help: RSA key pair file location [REQUIRED]
+type:  txt 
+syntax:expression: exec "/opt/vyatta/sbin/check_file_in_config_dir $VAR(@) '/config/auth'"
+val_help: File in /config/auth

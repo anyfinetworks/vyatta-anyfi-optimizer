@@ -57,17 +57,9 @@ sub setup_port_range
 sub setup_key_pair
 {
     my $instance = shift;
-    my $base64pem = shift;
-    my $keyfile = "/var/run/anyfi-optimizer-$instance.pem";
+    my $keyfile = shift;
     my $pubkeyfile = "/var/run/anyfi-optimizer-$instance.pub";
     my $config_lines = "";
-
-    open(HANDLE, ">$keyfile") || error("could not open RSA key pair file for writing.");
-    print HANDLE "-----BEGIN RSA PRIVATE KEY-----\n";
-    my @lines = ( $base64pem =~ /.{1,64}/gs );
-    print HANDLE join("\n", @lines) . "\n";
-    print HANDLE "-----END RSA PRIVATE KEY-----\n";
-    close(HANDLE);
 
     system("openssl rsa -in $keyfile -pubout -out $pubkeyfile 2> /dev/null") &&
         error("could not extract public key from RSA key pair.");
@@ -160,12 +152,12 @@ sub generate_config
     if( $config->exists("breakout") )
     {
         # RSA key pair
-        my $keypair = $config->returnValue("breakout rsa-key-pair");
-        if( !$keypair )
+        my $keypairfile = $config->returnValue("breakout rsa-key-pair file");
+        if( !$keypairfile )
         {
-            error("must specify RSA key pair.");
+            error("must specify an RSA key pair file.");
         }
-        $config_string .= setup_key_pair($instance, $keypair);
+        $config_string .= setup_key_pair($instance, $keypairfile);
 
         # NAT subnet
         my $subnet = $config->returnValue("breakout subnet");
