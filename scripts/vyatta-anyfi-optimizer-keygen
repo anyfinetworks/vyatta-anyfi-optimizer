@@ -1,0 +1,56 @@
+#!/bin/sh
+
+SIZE=2048
+
+if [ $# -ne 0 ]; then
+    echo "Usage: vyatta-anyfi-optimizer-keygen"
+    exit 1
+fi
+
+KEYFILE=/tmp/rsa${SIZE}keypair${RANDOM}.pem
+
+echo -n "Generating $SIZE bit RSA key pair..."
+# Generate RSA key pair file
+if ! openssl genrsa -out $KEYFILE $SIZE 2> /dev/null > /dev/null; then
+    echo "Failed to generate $SIZE bit RSA key pair."
+    exit 2
+fi
+echo "Done."
+
+# Extract the Vyatta configuration parameter rsa-key-pair and the
+# corresponding optimizer_key to be configured into CPE:
+RSA_KEY_PAIR=$(grep -v '^-----' $KEYFILE | tr -d '\n')
+PUBLIC_PEM=$(openssl rsa -in $KEYFILE -pubout 2> /dev/null)
+
+# Delete RSA key pair file
+rm -f $KEYFILE
+
+cat << EOF
+
+=== RSA KEY PAIR ================================================
+
+[rsa-key-pair] =
+$RSA_KEY_PAIR
+
+[optimizer-key] =
+$PUBLIC_PEM
+
+=== INSTRUCTIONS ================================================
+
+1) Configure your Optimizer with the RSA key pair:
+
+   $ configure
+   # edit service anyfi optimizer <instance>
+   # set breakout rsa-key-pair [rsa-key-pair]
+   # ...
+   # commit
+   # save
+   # exit
+
+2) Configure the public key portion of the RSA key pair in PEM format
+   [optimizer-key] into the WEBUI, CLI or TR-069 ACS (Anyfi.net vendor
+   extension InternetGatewayDevice.X_ANYFI_NET_Config.OptimizerKey).
+
+EOF
+
+exit 0
