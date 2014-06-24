@@ -1,3 +1,1 @@
-type: txt
 help: RSA key pair [REQUIRED]
-val_help: txt; BASE64 encoded PEM format

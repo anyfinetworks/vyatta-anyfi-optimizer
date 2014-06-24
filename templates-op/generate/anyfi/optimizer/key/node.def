@@ -1,2 +1,1 @@
 help: Generate optimizer RSA key pair
-run: /opt/vyatta/bin/vyatta-anyfi-optimizer-keygen
