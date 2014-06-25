@@ -17,9 +17,9 @@ end:
              # Stop the old daemon
              if [ -f /var/run/anyfi-optimizer-$VAR(@).pid ]; then
                  echo -n "Stopping anyfi optimizer:"
+                 sudo kill -TERM $(sudo cat /var/run/anyfi-optimizer-$VAR(@).pid)
                  TUNIF=$(grep nat_if0 /etc/anyfi-optimizer-$VAR(@).conf | sed -e 's|^.*tun/\([^ ]*\).*$|\1|')
                  sudo ip tuntap del dev $TUNIF mode tun 2> /dev/null
-                 sudo kill -TERM $(sudo cat /var/run/anyfi-optimizer-$VAR(@).pid)
                  echo " anyfi-optimizer."
              fi
          fi
