@@ -98,9 +98,10 @@ sub create_tun
     return($ifname);
 }
 
-sub setup_subnet
+sub setup_nat
 {
     my $subnet = shift;
+    my $pps = shift;
     my $ips = new NetAddr::IP($subnet);
     my $config_lines = "";
 
@@ -122,14 +123,12 @@ sub setup_subnet
     # Remove unwanted /32 specifier on all IP addresses
     $config_lines =~ s|/32||g;
 
+    if( $pps )
+    {
+        $config_lines .= "nat.params.max_connections_per_lan = $pps\n";
+    }
+
     return($config_lines);
-}
-
-sub setup_pps
-{
-    my $pps = shift;
-
-    return("nat.params.max_connections_per_lan = $pps\n");
 }
 
 sub generate_config
@@ -165,22 +164,15 @@ sub generate_config
         {
             error("must specify NAT subnet.");
         }
-        $config_string .= setup_subnet($subnet);
 
         # NAT port allocation strategy
-        if( $config->exists("breakout ports") )
+        my $pps = $config->returnValue("breakout ports per-service");
+        if( $config->exists("breakout ports") && !$pps )
         {
-            # Allocate fixed number of ports per SDWN service
-            my $pps = $config->returnValue("breakout ports per-service");
-
-            # TODO: Other port allocation strategies?
-
-            if( !$pps )
-            {
-                error("must configure a NAT port allocation strategy.");
-            }
-            $config_string .= setup_pps($pps);
+            error("must configure a NAT port allocation strategy.");
         }
+
+        $config_string .= setup_nat($subnet, $pps);
     }
 
     # TODO: Remove UUID...
