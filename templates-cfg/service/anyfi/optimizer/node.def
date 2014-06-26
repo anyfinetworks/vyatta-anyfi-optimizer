@@ -4,28 +4,22 @@ type: txt
 help: Anyfi Optimizer
 
 end:
-     if [ ${COMMIT_ACTION} == DELETE ]; then
+     if [ ${COMMIT_ACTION} != SET ]; then
          echo -n "Stopping anyfi optimizer:"
          sudo kill -TERM $(sudo cat /var/run/anyfi-optimizer-$VAR(@).pid)
          TUNIF=$(grep nat_if0 /etc/anyfi-optimizer-$VAR(@).conf | sed -e 's|^.*tun/\([^ ]*\).*$|\1|')
+         if [ -n "$VAR(breakout/policy/route/@)" ]; then
+             sudo /opt/vyatta/sbin/vyatta-firewall.pl --update-interfaces \
+                     delete $TUNIF in $VAR(breakout/policy/route/@) "policy route"
+         fi
          sudo ip tuntap del dev $TUNIF mode tun 2> /dev/null
          sudo rm -f /etc/anyfi-optimizer-$VAR(@).conf
          echo " anyfi-optimizer."
-     else	
-         # If this is an update, then first stop the old daemon
-         if [ ${COMMIT_ACTION} == ACTIVE ]; then
-             # Stop the old daemon
-             if [ -f /var/run/anyfi-optimizer-$VAR(@).pid ]; then
-                 echo -n "Stopping anyfi optimizer:"
-                 sudo kill -TERM $(sudo cat /var/run/anyfi-optimizer-$VAR(@).pid)
-                 TUNIF=$(grep nat_if0 /etc/anyfi-optimizer-$VAR(@).conf | sed -e 's|^.*tun/\([^ ]*\).*$|\1|')
-                 sudo ip tuntap del dev $TUNIF mode tun 2> /dev/null
-                 echo " anyfi-optimizer."
-             fi
-         fi
-
-         # Regenerate the config file
-         sudo /opt/vyatta/sbin/vyatta-anyfi-optimizer.pl --instance=$VAR(@) --config=/etc/anyfi-optimizer-$VAR(@).conf || exit 1 
+     fi
+     if [ ${COMMIT_ACTION} != DELETE ]; then
+         # Setup and config file generation
+         sudo /opt/vyatta/sbin/vyatta-anyfi-optimizer.pl \
+                 --instance=$VAR(@) --config=/etc/anyfi-optimizer-$VAR(@).conf || exit 1 
 
          # Make sure settings passed on command line are set
          if [ -z "$VAR(controller/@)" ]; then
@@ -44,7 +38,8 @@ end:
          # Start the daemon
          # TODO: server -> controller
          echo -n "Starting anyfi optimizer:"
-         sudo /usr/sbin/anyfi-optimizer --accept-license -s $VAR(controller/@) -p $first_port -B -P /var/run/anyfi-optimizer-$VAR(@).pid /etc/anyfi-optimizer-$VAR(@).conf || exit 1
+         sudo /usr/sbin/anyfi-optimizer --accept-license -s $VAR(controller/@) -p $first_port -B \
+                 -P /var/run/anyfi-optimizer-$VAR(@).pid /etc/anyfi-optimizer-$VAR(@).conf || exit 1
          echo " anyfi-optimizer."
      fi
 
