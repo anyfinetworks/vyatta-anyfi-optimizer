@@ -101,13 +101,16 @@ sub create_tun
 sub setup_nat
 {
     my $subnet = shift;
+    my $policy = shift;
     my $pps = shift;
     my $ips = new NetAddr::IP($subnet);
     my $config_lines = "";
 
+    # Create TUN interface
     my $tunif = create_tun('opt%d');
     my $llidx = substr($tunif, 3) + 1;
 
+    # NAT subnet
     system("route del -net $subnet 2> /dev/null") if (scalar(@$ips) > 1);
     system("route del -host $subnet 2> /dev/null") if (scalar(@$ips) == 1);
 
@@ -123,6 +126,13 @@ sub setup_nat
     # Remove unwanted /32 specifier on all IP addresses
     $config_lines =~ s|/32||g;
 
+    # NAT policy route rule set
+    if( $policy )
+    {
+        system("/opt/vyatta/sbin/vyatta-firewall.pl --update-interfaces update $tunif in $policy 'policy route'");
+    }
+
+    # NAT port allocation strategy
     if( $pps )
     {
         $config_lines .= "nat.params.max_connections_per_lan = $pps\n";
@@ -165,6 +175,13 @@ sub generate_config
             error("must specify NAT subnet.");
         }
 
+        # NAT policy route rule set
+        my $policy = $config->returnValue("breakout policy route");
+        if( $config->exists("breakout policy") && !$policy )
+        {
+            error("must specify policy route rule set.");
+        }
+
         # NAT port allocation strategy
         my $pps = $config->returnValue("breakout ports per-service");
         if( $config->exists("breakout ports") && !$pps )
@@ -172,7 +189,7 @@ sub generate_config
             error("must configure a NAT port allocation strategy.");
         }
 
-        $config_string .= setup_nat($subnet, $pps);
+        $config_string .= setup_nat($subnet, $policy, $pps);
     }
 
     # TODO: Remove UUID...
