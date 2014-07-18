@@ -1,5 +1,5 @@
 help: Generate optimizer RSA key pair with specified file name
 run:
-    /opt/vyatta/bin/vyatta-anyfi-optimizer-keygen -b 2048 -f "$5"
+    /opt/vyatta/bin/vyatta-anyfi-optimizer-keygen -f "$5"
     /opt/vyatta/sbin/check_file_in_config_dir "$5" '/config/auth'
 allowed: echo -n '<filename>'
