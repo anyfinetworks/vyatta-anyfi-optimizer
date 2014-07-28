@@ -70,75 +70,12 @@ sub setup_key_pair
     return($config_lines);
 }
 
-# TUN ioctl constants:
-use constant TUNSETIFF     => 0x400454ca;
-use constant TUNSETPERSIST => 0x400454cb;
-use constant IFF_TUN       => 0x0001;
-use constant IFF_PERSIST   => 0x0100;
-use constant STRUCT_IFREQ  => 'Z16 s';
-
-sub create_tun
+sub setup_bridge
 {
-    my $basename = shift;
-    my $ifname;
+    my $bridge = shift;
+    my $bridge_string = "nat_if0 = tap/$bridge ip dhcp\n";
 
-    my $fh  = new IO::File('/dev/net/tun', 'r+');
-    my $ifr = pack(STRUCT_IFREQ, $basename, IFF_TUN);
-
-    ioctl $fh, TUNSETIFF, $ifr
-        or error("Can't create tun: $!");
-
-    $ifname = (unpack(STRUCT_IFREQ, $ifr))[0];
-
-    $ifr = pack(STRUCT_IFREQ, $ifname, IFF_PERSIST);
-
-    ioctl $fh, TUNSETPERSIST, $ifr
-        or error("Can't make tun persistant: $!");
-
-    return($ifname);
-}
-
-sub setup_nat
-{
-    my $subnet = shift;
-    my $policy = shift;
-    my $pps = shift;
-    my $ips = new NetAddr::IP($subnet);
-    my $config_lines = "";
-
-    # Create TUN interface
-    my $tunif = create_tun('opt%d');
-    my $llidx = substr($tunif, 3) + 1;
-
-    # NAT subnet
-    system("route del -net $subnet 2> /dev/null") if (scalar(@$ips) > 1);
-    system("route del -host $subnet 2> /dev/null") if (scalar(@$ips) == 1);
-
-    system("ifconfig $tunif inet 169.254.$llidx.1");
-    system("ifconfig $tunif dstaddr 169.254.$llidx.2");
-    system("route add -net $subnet gw 169.254.$llidx.2") if (scalar(@$ips) > 1);
-    system("route add -host $subnet gw 169.254.$llidx.2") if (scalar(@$ips) == 1);
-
-    $config_lines .= "nat_if0 = tun/$tunif ip ";
-    $config_lines .= join(',', @$ips);
-    $config_lines .= "\n";
-
-    # Remove unwanted /32 specifier on all IP addresses
-    $config_lines =~ s|/32||g;
-
-    # NAT policy route rule set
-    if( $policy )
-    {
-        system("/opt/vyatta/sbin/vyatta-firewall.pl --update-interfaces update $tunif in $policy 'policy route'");
-    }
-
-    # NAT port allocation strategy
-    if( $pps )
-    {
-        $config_lines .= "nat.params.max_connections_per_lan = $pps\n";
-    }
-
-    return($config_lines);
+    return($bridge_string);
 }
 
 sub generate_config
@@ -158,42 +95,25 @@ sub generate_config
     $config_string .= setup_port_range($port_range);
 
     # Breakout of Internet-bound traffic
-    if( $config->exists("breakout") )
+    if( $config->exists("bridge") || $config->exists("rsa-key-pair") )
     {
         # RSA key pair
-        my $keypairfile = $config->returnValue("breakout rsa-key-pair file");
+        my $keypairfile = $config->returnValue("rsa-key-pair file");
         if( !$keypairfile )
         {
             error("must specify an RSA key pair file.");
         }
         $config_string .= setup_key_pair($instance, $keypairfile);
 
-        # NAT subnet
-        my $subnet = $config->returnValue("breakout subnet");
-        if( !$subnet )
+        # Bridge
+        my $bridge = $config->returnValue("bridge");
+        if( !$bridge )
         {
-            error("must specify NAT subnet.");
+            error("must configure a breakout bridge interface.");
         }
 
-        # NAT policy route rule set
-        my $policy = $config->returnValue("breakout policy route");
-        if( $config->exists("breakout policy") && !$policy )
-        {
-            error("must specify policy route rule set.");
-        }
-
-        # NAT port allocation strategy
-        my $pps = $config->returnValue("breakout ports per-service");
-        if( $config->exists("breakout ports") && !$pps )
-        {
-            error("must configure a NAT port allocation strategy.");
-        }
-
-        $config_string .= setup_nat($subnet, $policy, $pps);
+        $config_string .= setup_bridge($bridge);
     }
-
-    # TODO: Remove UUID...
-    $config_string .= "uuid = " . `cat /proc/sys/kernel/random/uuid`;
 
     return($config_string);
 }

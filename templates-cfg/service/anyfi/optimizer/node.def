@@ -7,17 +7,11 @@ end:
      if [ ${COMMIT_ACTION} != SET ]; then
          echo -n "Stopping anyfi optimizer:"
          sudo kill -TERM $(sudo cat /var/run/anyfi-optimizer-$VAR(@).pid)
-         TUNIF=$(grep nat_if0 /etc/anyfi-optimizer-$VAR(@).conf | sed -e 's|^.*tun/\([^ ]*\).*$|\1|')
-         if [ -n "$VAR(breakout/policy/route/@)" ]; then
-             sudo /opt/vyatta/sbin/vyatta-firewall.pl --update-interfaces \
-                     delete $TUNIF in $VAR(breakout/policy/route/@) "policy route"
-         fi
-         sudo ip tuntap del dev $TUNIF mode tun 2> /dev/null
          sudo rm -f /etc/anyfi-optimizer-$VAR(@).conf
          echo " anyfi-optimizer."
      fi
      if [ ${COMMIT_ACTION} != DELETE ]; then
-         # Setup and config file generation
+         # Config file generation
          sudo /opt/vyatta/sbin/vyatta-anyfi-optimizer.pl \
                  --instance=$VAR(@) --config=/etc/anyfi-optimizer-$VAR(@).conf || exit 1 
 
