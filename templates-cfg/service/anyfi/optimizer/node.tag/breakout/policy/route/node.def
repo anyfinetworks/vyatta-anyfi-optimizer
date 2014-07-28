@@ -1,4 +1,0 @@
-type: txt
-help: Policy route ruleset for breakout traffic
-allowed: cli-shell-api listActiveNodes policy route | sed -re s/\'//g
-val_help: Policy route ruleset
