@@ -6,9 +6,12 @@ help: Anyfi Optimizer
 end:
      if [ ${COMMIT_ACTION} != SET ]; then
          echo -n "Stopping anyfi optimizer:"
-         sudo kill -TERM $(sudo cat /var/run/anyfi-optimizer-$VAR(@).pid)
-         sudo rm -f /etc/anyfi-optimizer-$VAR(@).conf
-         echo " anyfi-optimizer."
+         if [ -f /var/run/anyfi-optimizer-$VAR(@).pid ]; then
+             sudo kill -TERM $(sudo cat /var/run/anyfi-optimizer-$VAR(@).pid)
+             sudo rm -f /etc/anyfi-optimizer-$VAR(@).conf
+             echo -n " anyfi-optimizer"
+         fi
+         echo "."
      fi
      if [ ${COMMIT_ACTION} != DELETE ]; then
          # Config file generation
