@@ -1,4 +1,5 @@
-help: RSA key pair file location [REQUIRED]
+help: RSA key pair file location
 type:  txt 
 syntax:expression: exec "/opt/vyatta/sbin/check_file_in_config_dir $VAR(@) '/config/auth'"
 val_help: File in /config/auth
+allowed: ls /config/auth
