@@ -36,7 +36,7 @@ cat << EOF
 
    $ configure
    # edit service anyfi optimizer <instance>
-   # set breakout rsa-key-pair file '${FILE}'
+   # set rsa-key-pair file '${FILE}'
    # ...
    # commit
    # save
