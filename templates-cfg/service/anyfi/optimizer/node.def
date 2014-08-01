@@ -33,9 +33,8 @@ end:
          first_port=$(echo $port_range | cut -d- -f1)
 
          # Start the daemon
-         # TODO: server -> controller
          echo -n "Starting anyfi optimizer:"
-         sudo /usr/sbin/anyfi-optimizer --accept-license -s $VAR(controller/@) -p $first_port -B \
+         sudo /usr/sbin/anyfi-optimizer --accept-license -C $VAR(controller/@) -p $first_port -B \
                  -P /var/run/anyfi-optimizer-$VAR(@).pid /etc/anyfi-optimizer-$VAR(@).conf || exit 1
          echo " anyfi-optimizer."
      fi
