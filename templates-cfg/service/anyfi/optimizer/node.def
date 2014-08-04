@@ -4,21 +4,8 @@ type: txt
 help: Anyfi Optimizer
 
 end:
-     if [ ${COMMIT_ACTION} != SET ]; then
-         echo -n "Stopping anyfi optimizer:"
-         if [ -f /var/run/anyfi-optimizer-$VAR(@).pid ]; then
-             sudo kill -TERM $(sudo cat /var/run/anyfi-optimizer-$VAR(@).pid)
-             sudo rm -f /etc/anyfi-optimizer-$VAR(@).conf
-             echo -n " anyfi-optimizer"
-         fi
-         echo "."
-     fi
+     # Validate configuration and generate conffile
      if [ ${COMMIT_ACTION} != DELETE ]; then
-         # Config file generation
-         sudo /opt/vyatta/sbin/vyatta-anyfi-optimizer.pl \
-                 --instance=$VAR(@) --config=/etc/anyfi-optimizer-$VAR(@).conf || exit 1 
-
-         # Make sure settings passed on command line are set
          if [ -z "$VAR(controller/@)" ]; then
             echo "Error configuring anyfi optimizer: must specify controller."
             exit 1
@@ -28,11 +15,25 @@ end:
             exit 1
          fi
 
+         sudo /opt/vyatta/sbin/vyatta-anyfi-optimizer.pl \
+                 --instance=$VAR(@) --config=/etc/anyfi-optimizer-$VAR(@).conf || exit 1 
+     fi
+
+     # Stop the old daemon
+     if [ ${COMMIT_ACTION} == ACTIVE ] || [ ${COMMIT_ACTION} == DELETE ]; then
+         if [ -f /var/run/anyfi-optimizer-$VAR(@).pid ]; then
+             echo -n "Stopping anyfi optimizer:"
+             sudo kill -TERM $(sudo cat /var/run/anyfi-optimizer-$VAR(@).pid)
+             echo " anyfi-optimizer."
+         fi
+     fi
+
+     # Start a new daemon
+     if [ ${COMMIT_ACTION} != DELETE ]; then
          # Extract first UDP port for command line option
          port_range=$(/bin/cli-shell-api returnValue service anyfi optimizer $VAR(@) port-range)
          first_port=$(echo $port_range | cut -d- -f1)
 
-         # Start the daemon
          echo -n "Starting anyfi optimizer:"
          sudo /usr/sbin/anyfi-optimizer --accept-license -C $VAR(controller/@) -p $first_port -B \
                  -P /var/run/anyfi-optimizer-$VAR(@).pid /etc/anyfi-optimizer-$VAR(@).conf || exit 1
