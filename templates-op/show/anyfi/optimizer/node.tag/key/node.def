@@ -1,2 +1,0 @@
-help: Show optimizer key
-run: cat /var/run/anyfi-optimizer-$4.pub | base64 -w0
