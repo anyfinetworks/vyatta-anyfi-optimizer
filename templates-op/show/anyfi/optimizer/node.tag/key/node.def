@@ -1,0 +1,2 @@
+help: Show optimizer key
+run: cat /var/run/anyfi-optimizer-$4.pub | sha256sum | cut -c1-64
