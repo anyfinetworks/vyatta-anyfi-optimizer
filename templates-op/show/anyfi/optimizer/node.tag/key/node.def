@@ -1,2 +1,2 @@
 help: Show optimizer key
-run: cat /var/run/anyfi-optimizer-$4.pub | sha256sum | cut -c1-64
+run: openssl rsa -in /var/run/anyfi-optimizer-$4.pub -pubin -pubout -outform DER 2>/dev/null | sha256sum | cut -c1-64

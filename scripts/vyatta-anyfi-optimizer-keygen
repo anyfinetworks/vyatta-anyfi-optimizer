@@ -26,7 +26,7 @@ if ! openssl genrsa -out $FILE $BITS 2> /dev/null; then
 fi
 echo "Done."
 
-OPTIMIZER_KEY=$(openssl rsa -in $FILE -pubout 2> /dev/null | sha256sum | cut -c1-64)
+OPTIMIZER_KEY=$(openssl rsa -in $FILE -pubout -outform DER 2>/dev/null | sha256sum | cut -c1-64)
 
 cat << EOF
 
