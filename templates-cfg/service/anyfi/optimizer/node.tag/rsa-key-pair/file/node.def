@@ -1,5 +1,7 @@
 help: RSA key pair file location
 type:  txt 
+syntax:expression: exec "[ -f $VAR(@) ]" ; "File does not exist"
+syntax:expression: exec "[ $VAR(@) == $(readlink -f $VAR(@)) ]" ; "File path must be absolute"
 syntax:expression: exec "/opt/vyatta/sbin/check_file_in_config_dir $VAR(@) '/config/auth'"
-val_help: File in /config/auth
+val_help: File path
 allowed: find /config/auth/ -type f -print

@@ -1,5 +1,5 @@
-help: Generate optimizer RSA key pair with specified file name
+help: Generate RSA key pair file with specified path
 run:
-    /opt/vyatta/bin/vyatta-anyfi-optimizer-keygen -f "$5"
+    /opt/vyatta/bin/vyatta-anyfi-optimizer-keygen -f $(readlink -f "$5")
     /opt/vyatta/sbin/check_file_in_config_dir "$5" '/config/auth'
 allowed: echo -n '<filename>'
