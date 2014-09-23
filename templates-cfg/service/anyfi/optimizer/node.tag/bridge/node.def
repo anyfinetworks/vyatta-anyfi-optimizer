@@ -1,3 +1,3 @@
 type: txt
-help: Bridge interface for breakout
+help: Bridge interface for breakout [REQUIRED]
 allowed: cli-shell-api listNodes interfaces bridge
