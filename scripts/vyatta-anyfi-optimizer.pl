@@ -94,21 +94,26 @@ sub generate_config
     }
     $config_string .= setup_port_range($port_range);
 
-    # RSA key pair
-    my $keypairfile = $config->returnValue("rsa-key-pair file");
-    if( !$keypairfile )
+    # Breakout of Internet-bound traffic
+    if( $config->exists("bridge") || $config->exists("rsa-key-pair") )
     {
-    error("must specify an RSA key pair file.");
-    }
-    $config_string .= setup_key_pair($instance, $keypairfile);
+        # RSA key pair
+        my $keypairfile = $config->returnValue("rsa-key-pair file");
+        if( !$keypairfile )
+        {
+            error("must specify an RSA key pair file.");
+        }
+        $config_string .= setup_key_pair($instance, $keypairfile);
 
-    # Bridge
-    my $bridge = $config->returnValue("bridge");
-    if( !$bridge )
-    {
-        error("must configure a breakout bridge interface.");
+        # Bridge
+        my $bridge = $config->returnValue("bridge");
+        if( !$bridge )
+        {
+            error("must configure a breakout bridge interface.");
+        }
+
+        $config_string .= setup_bridge($bridge);
     }
-    $config_string .= setup_bridge($bridge);
 
     return($config_string);
 }
