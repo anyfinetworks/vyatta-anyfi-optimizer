@@ -10,7 +10,8 @@ Architecture: all
 Depends: vyatta-cfg-system,
  vyatta-cfg,
  vyatta-op,
- vyatta-anyfi-common,
+ openssl,
+ vyatta-anyfi-common (>= 1.1.0),
  anyfi-optimizer,
  ${misc:Depends}
 Replaces: vyatta-anyfi-optimizer
