@@ -1,0 +1,4 @@
+type: txt
+help: Controller key
+val_help: SHA256 of Controller's RSA public key
+syntax:expression: pattern $VAR(@) "^[A-Fa-f0-9]{16,64}$" ; "Controller key must be 16 to 64 hexadecimal digits"

@@ -12,10 +12,9 @@ Depends: vyatta-cfg-system,
  vyatta-op,
  openssl,
  vyatta-anyfi-common (>= 1.1.0),
- anyfi-optimizer,
+ anyfi-optimizer (>= 1.7.0),
  ${misc:Depends}
 Replaces: vyatta-anyfi-optimizer
 Description: Vyatta integration for Anyfi Optimizer
- Vyatta integration for Anyfi Optimizer, A Software-Defined
- Wireless Networking (SDWN) relay with local break-out
- and Carrier Grade NAT (CGN) for carrier Wi-Fi.
+ Vyatta integration for Anyfi Optimizer, a Software-Defined
+ Wireless Networking (SDWN) central breakout solution.

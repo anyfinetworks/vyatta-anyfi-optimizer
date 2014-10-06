@@ -2,13 +2,18 @@ tag:
 priority: 999
 type: txt
 help: Anyfi Optimizer
-
 end:
      # Validate configuration and generate conffile
      if [ ${COMMIT_ACTION} != DELETE ]; then
-         if [ -z "$VAR(controller/@)" ]; then
-            echo "Error configuring anyfi optimizer: must specify controller."
-            exit 1
+         eval controllers=( $(cli-shell-api listNodes service anyfi optimizer $VAR(@) controller) )
+
+         if [ -z "${controllers[0]}" ]; then
+             echo "Error configuring anyfi optimizer: must specify controller."
+             exit 1
+         fi
+         if [ -n "${controllers[1]}" ]; then
+             echo "Error configuring anyfi optimizer: cannot specify more than one controller."
+             exit 1
          fi
          if [ -z "$VAR(port-range/@)" ]; then
             echo "Error configuring anyfi optimizer: must specify UDP port range."
@@ -16,7 +21,7 @@ end:
          fi
 
          sudo /opt/vyatta/sbin/vyatta-anyfi-optimizer.pl \
-                 --instance=$VAR(@) --config=/etc/anyfi-optimizer-$VAR(@).conf || exit 1 
+                 --instance=$VAR(@) --config=/etc/anyfi-optimizer-$VAR(@).conf || exit 1
      fi
 
      # Stop the old daemon
@@ -30,13 +35,22 @@ end:
 
      # Start a new daemon
      if [ ${COMMIT_ACTION} != DELETE ]; then
+         controller=${controllers[0]}
+         args="-C $controller"
+
+         if cli-shell-api exists service anyfi optimizer $VAR(@) controller $controller key; then
+             key=$(cli-shell-api returnValue service anyfi optimizer $VAR(@) controller $controller key)
+             args="$args --controller-key=$key"
+         fi
+
          # Extract first UDP port for command line option
-         port_range=$(/bin/cli-shell-api returnValue service anyfi optimizer $VAR(@) port-range)
-         first_port=$(echo $port_range | cut -d- -f1)
+         first_port=$(cli-shell-api returnValue service anyfi optimizer $VAR(@) port-range | cut -d- -f1)
+         args="$args -p $first_port"
+
+         args="$args -B -P /var/run/anyfi-optimizer-$VAR(@).pid /etc/anyfi-optimizer-$VAR(@).conf"
 
          echo -n "Starting anyfi optimizer:"
-         sudo /usr/sbin/anyfi-optimizer --accept-license -C $VAR(controller/@) -p $first_port -B \
-                 -P /var/run/anyfi-optimizer-$VAR(@).pid /etc/anyfi-optimizer-$VAR(@).conf || exit 1
+         sudo /usr/sbin/anyfi-optimizer --accept-license $args || exit 1
          echo " anyfi-optimizer."
      fi
 
