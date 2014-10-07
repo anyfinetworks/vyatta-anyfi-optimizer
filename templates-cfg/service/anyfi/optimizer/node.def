@@ -21,11 +21,9 @@ end:
 
      # Stop the old daemon
      if [ ${COMMIT_ACTION} == ACTIVE ] || [ ${COMMIT_ACTION} == DELETE ]; then
-         if [ -f /var/run/anyfi-optimizer-$VAR(@).pid ]; then
-             echo -n "Stopping anyfi optimizer:"
-             sudo kill -TERM $(sudo cat /var/run/anyfi-optimizer-$VAR(@).pid)
-             echo " anyfi-optimizer."
-         fi
+         echo -n "Stopping anyfi optimizer:"
+         sudo /opt/vyatta/sbin/vyatta-anyfi-stop-daemon /var/run/anyfi-optimizer-$VAR(@).pid && \
+             echo " anyfi-optimizer." || echo " [E anyfi-optimizer]."
      fi
 
      # Start a new daemon
