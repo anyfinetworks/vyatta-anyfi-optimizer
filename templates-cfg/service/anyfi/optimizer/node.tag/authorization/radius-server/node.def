@@ -1,0 +1,5 @@
+tag:
+type: ipv4
+help: Radius authorization server [REQUIRED]
+commit:expression: $VAR(secret) != ""
+                     ; "Error configuring Radius: must specify secret."

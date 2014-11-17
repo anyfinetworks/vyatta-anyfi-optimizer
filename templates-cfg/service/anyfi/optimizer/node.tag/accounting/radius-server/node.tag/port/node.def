@@ -1,0 +1,6 @@
+type: u32
+help: Radius server port
+val_help: u32:1-65535; Numbered port
+syntax:expression: $VAR(@) >= 1 && $VAR(@) <= 65535; \
+       "Port must be between 1 and 65535."
+default: 1813

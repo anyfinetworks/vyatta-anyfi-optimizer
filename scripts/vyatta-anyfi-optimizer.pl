@@ -47,9 +47,9 @@ sub setup_port_range
     #       command line option from template), while the rest are
     #       for relaying of SDWN data plane tunnels.
     $first += 1;
-    $config_lines .= "ports_first = $first\n";
+    $config_lines .= "port_range_start = $first\n";
     my $nports = $last - $first;
-    $config_lines .= "ports = $nports\n";
+    $config_lines .= "port_range_count = $nports\n";
 
     return($config_lines);
 }
@@ -64,8 +64,7 @@ sub setup_key_pair
     system("openssl rsa -in $keyfile -pubout -out $pubkeyfile 2> /dev/null") &&
         error("could not extract public key from RSA key pair.");
 
-    $config_lines .= "keyfile = $keyfile\n";
-    $config_lines .= "pubkeyfile = $pubkeyfile\n";
+    $config_lines .= "rsa_keypair = $keyfile\n";
 
     return($config_lines);
 }
@@ -73,9 +72,51 @@ sub setup_key_pair
 sub setup_bridge
 {
     my $bridge = shift;
-    my $bridge_string = "nat_if0 = tap/$bridge ip dhcp\n";
+    my $bridge_string = "bridge = $bridge\n";
 
     return($bridge_string);
+}
+
+sub setup_radius_server
+{
+    my $server = shift;
+    my $port = shift;
+    my $secret = shift;
+    my $role = shift; # autz/acct
+    my $radius_string = "";
+
+    $radius_string .= "radius_" . $role . "_server = $server\n";
+
+    $radius_string .= "radius_" . $role . "_port = $port\n";
+
+    $radius_string .= "radius_" . $role . "_secret = $secret\n";
+
+    return($radius_string);
+}
+
+sub setup_nas
+{
+    my $identifier = shift;
+    my $ipaddr = shift;
+    my $port = shift;
+    my $nas_string = "";
+
+    if( defined($identifier) )
+    {
+        $nas_string .= "nas_identifier = $identifier\n";
+    }
+
+    if( defined($ipaddr) )
+    {
+        $nas_string .= "nas_ip_address = $ipaddr\n";
+    }
+
+    if( defined($port) )
+    {
+        $nas_string .= "nas_port = $port\n";
+    }
+
+    return($nas_string);
 }
 
 sub generate_config
@@ -109,6 +150,54 @@ sub generate_config
         error("must configure a breakout bridge interface.");
     }
     $config_string .= setup_bridge($bridge);
+
+    # Authorization
+    if( $config->exists("authorization") )
+    {
+        my @servers = $config->listNodes("authorization radius-server");
+
+        if( scalar(@servers) != 1 )
+        {
+            error("must specify exactly one radius authorization server.");
+        }
+        else
+        {
+            my $server = shift(@servers);
+            my $port = $config->returnValue("authorization radius-server $server port");
+            my $secret = $config->returnValue("authorization radius-server $server secret");
+
+            $config_string .= setup_radius_server($server, $port, $secret, "autz");
+        }
+    }
+
+    # Accounting settings
+    if( $config->exists("accounting") )
+    {
+        my @servers = $config->listNodes("accounting radius-server");
+
+        if( scalar(@servers) != 1 )
+        {
+            error("must specify exactly one radius accounting server.");
+        }
+        else
+        {
+            my $server = shift(@servers);
+            my $port = $config->returnValue("accounting radius-server $server port");
+            my $secret = $config->returnValue("accounting radius-server $server secret");
+
+            $config_string .= setup_radius_server($server, $port, $secret, "acct");
+        }
+    }
+
+    # Network Access Server
+    if( $config->exists("nas") )
+    {
+        my $identifier = $config->returnValue("nas identifier");
+        my $ipaddr = $config->returnValue("nas ip-address");
+        my $port = $config->returnValue("nas port");
+
+        $config_string .= setup_nas($identifier, $ipaddr, $port);
+    }
 
     return($config_string);
 }
