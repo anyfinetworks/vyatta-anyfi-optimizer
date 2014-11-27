@@ -1,0 +1,2 @@
+help: List connected services
+run: sudo /usr/sbin/anyfi-optimizerctl -c /var/run/relaydsock.$(sudo cat /var/run/anyfi-optimizer-$4.pid) services
