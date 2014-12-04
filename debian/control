@@ -12,7 +12,7 @@ Depends: vyatta-cfg-system,
  vyatta-op,
  openssl,
  vyatta-anyfi-common (>= 1.1.1),
- anyfi-optimizer (>= 1.8.0),
+ anyfi-optimizer (>= 1.8.4),
  ${misc:Depends}
 Replaces: vyatta-anyfi-optimizer
 Description: Vyatta integration for Anyfi Optimizer
