@@ -151,6 +151,12 @@ sub generate_config
     }
     $config_string .= setup_bridge($bridge);
 
+    # Disable IPv6
+    if( $config->exists("disable-ipv6") )
+    {
+        $config_string .= "block_ipv6 = 1\n";
+    }
+
     # Authorization
     if( $config->exists("authorization") )
     {
