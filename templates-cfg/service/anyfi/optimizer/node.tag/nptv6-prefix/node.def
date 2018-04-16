@@ -1,0 +1,4 @@
+tag:
+type: txt
+help: NPTv6 prefixes for breakout traffic.
+val_help: <text>; IPv6 prefix, e.g. "2a04:ae0c:2800::/48"

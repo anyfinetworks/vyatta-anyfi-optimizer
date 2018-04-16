@@ -1,0 +1,4 @@
+type: txt
+help: Next hop router for IPv6 traffic on the breakout interface.
+val_help: ipv6; IP address
+val_help: <text>; IPv6 address, e.g. "fe80::21b:21ff:fe04:c94c"
