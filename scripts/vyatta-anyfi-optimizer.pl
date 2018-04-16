@@ -157,6 +157,20 @@ sub generate_config
         $config_string .= "block_ipv6 = 1\n";
     }
 
+    # NPTv6
+    my @nptv6_prefixes = $config->listNodes("nptv6-prefix");
+    for my $nptv6_prefix (@nptv6_prefixes)
+    {
+        $config_string .= "nptv6-prefix = $nptv6_prefix\n";
+    }
+
+    # IPv6 next hop router
+    my $ipv6_next_hop = $config->returnValue("ipv6-next-hop-router");
+    if( $ipv6_next_hop )
+    {
+        $config_string .= "ipv6-next-hop-router = $ipv6_next_hop\n";
+    }
+
     # Authorization
     if( $config->exists("authorization") )
     {
